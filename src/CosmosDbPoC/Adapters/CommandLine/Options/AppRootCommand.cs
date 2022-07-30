@@ -24,14 +24,6 @@ public class AppRootCommand : RootCommand
         
         this.SetHandler((endpointValue, primaryKeyValue) =>
         {
-            if (endpointValue is not null)
-                Environment.SetEnvironmentVariable("CosmosDb__Outbox__Endpoint", endpointValue,
-                    EnvironmentVariableTarget.User);
-
-            if (primaryKeyValue is not null)
-                Environment.SetEnvironmentVariable("CosmosDb__Outbox__PrimaryKey", primaryKeyValue,
-                    EnvironmentVariableTarget.User);
-
             var name = AnsiConsole.Ask<string>("What's your [green]name[/]?");
             var email = AnsiConsole.Ask<string>("What's your [green]email[/]?");
 
