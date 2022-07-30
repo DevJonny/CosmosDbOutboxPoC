@@ -9,13 +9,14 @@ using Serilog;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
-    .CreateLogger();
+    .CreateBootstrapLogger();
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services.AddBrighter().AutoFromAssemblies();
     })
+    .UseSerilog()
     .Build();
 
 var commandProcessor = host.Services.GetRequiredService<IAmACommandProcessor>();
