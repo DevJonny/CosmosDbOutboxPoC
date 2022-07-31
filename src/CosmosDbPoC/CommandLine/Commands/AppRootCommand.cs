@@ -1,5 +1,6 @@
 using System.CommandLine;
 using CosmosDbPoC.Commands;
+using CosmosDbPoC.DataAccess;
 using Spectre.Console;
 
 namespace CosmosDbPoC.CommandLine.Commands;
@@ -20,7 +21,7 @@ public class AppRootCommand : RootCommand
             var name = AnsiConsole.Ask<string>("What's your [green]name[/]?");
             var email = AnsiConsole.Ask<string>("What's your [green]email[/]?");
 
-            new CreateContactCommand
+            new CreateContactCommand(new UnitOfWork())
             {
                 Name = name,
                 Email = email
