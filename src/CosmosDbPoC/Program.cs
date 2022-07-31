@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
-using CosmosDbPoC.Adapters.CommandLine.Options;
+using CosmosDbPoC;
+using CosmosDbPoC.CommandLine.Commands;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Paramore.Brighter;
-using Paramore.Brighter.Extensions.DependencyInjection;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -11,16 +11,20 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
-var host = Host.CreateDefaultBuilder(args)
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+var cosmosDbOptions = config.GetRequiredSection(CosmosDbOptions.CosmosDb).Get<CosmosDbOptions>();
+
+Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
-        services.AddBrighter().AutoFromAssemblies();
+        services.AddSingleton(cosmosDbOptions);
     })
     .UseSerilog()
     .Build();
 
-var commandProcessor = host.Services.GetRequiredService<IAmACommandProcessor>();
-
-await new AppRootCommand(commandProcessor)
+await new AppRootCommand(cosmosDbOptions)
     .Setup()
     .InvokeAsync(args);
