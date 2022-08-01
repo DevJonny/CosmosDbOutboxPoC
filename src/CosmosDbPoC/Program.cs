@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using CosmosDbPoC;
 using CosmosDbPoC.CommandLine.Commands;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,20 +12,21 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
-var config = new ConfigurationBuilder()
+var cosmosDbOptions = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
-    .Build();
+    .Build()
+    .GetRequiredSection(CosmosDbOptions.CosmosDb)
+    .Get<CosmosDbOptions>();
 
-var cosmosDbOptions = config.GetRequiredSection(CosmosDbOptions.CosmosDb).Get<CosmosDbOptions>();
-
-Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices(async services =>
     {
         services.AddSingleton(cosmosDbOptions);
+        services.AddCosmosDb(cosmosDbOptions).Wait();
     })
     .UseSerilog()
     .Build();
 
-await new AppRootCommand(cosmosDbOptions)
+await new AppRootCommand(host.Services.GetService<Container>())
     .Setup()
     .InvokeAsync(args);
