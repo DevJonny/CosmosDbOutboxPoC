@@ -1,6 +1,9 @@
+using Newtonsoft.Json;
+
 namespace CosmosDbPoC.Model;
 
-public record Contact(string Name, string Email) : IAmPersisted
+public record Contact(string Name, string Email) : PersistedEntity
 {
-    public Guid Id { get; } = Guid.NewGuid();
+    public override string ToString()
+        => JsonConvert.SerializeObject(this);
 }

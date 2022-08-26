@@ -2,7 +2,11 @@ using CosmosDbPoC.Model;
 
 namespace CosmosDbPoC.Events;
 
-public interface IEvent
+public record IEvent : PersistedEntity
 {
-    IAmPersisted PersistedEntity { get; init; }
+    public PersistedEntity PersistedEntity { get; init; }
+
+    public string Type { get; }
+
+    public bool Dispatched { get; set; }
 }

@@ -1,14 +1,20 @@
 using CosmosDbPoC.Model;
+using Newtonsoft.Json;
 
 namespace CosmosDbPoC.Events;
 
-public record ContactCreatedEvent : IEvent, IAmPersisted
+public record ContactCreatedEvent : IEvent
 {
     public ContactCreatedEvent(Contact contact)
     {
         PersistedEntity = contact;
     }
-    
-    public Guid Id { get; } = Guid.NewGuid();
-    public IAmPersisted PersistedEntity { get; init; }
+
+    public override Guid PartitionKey => PersistedEntity.Id;
+    public string Type => nameof(ContactCreatedEvent);
+    public PersistedEntity PersistedEntity { get; init; }
+    public bool Dispatched { get; set; }
+
+    public override string ToString()
+        => JsonConvert.SerializeObject(this);
 }

@@ -1,5 +1,6 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace CosmosDbPoC;
 
@@ -13,20 +14,26 @@ public static class ServiceCollectionExtensions
             Array.Empty<(string databaseId, string containerId)>(),
             new CosmosClientOptions
             {
-                SerializerOptions = new CosmosSerializationOptions()
+                SerializerOptions = new CosmosSerializationOptions
                 {
                     PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
                     IgnoreNullValues = true
                 }
             }).Result;
 
-        await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbOptions.Database);
-        await cosmosClient
-            .GetDatabase(cosmosDbOptions.Database)
-            .CreateContainerIfNotExistsAsync(cosmosDbOptions.Container, "/id");
+        Database database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbOptions.Database);
+        Container container = await database.CreateContainerIfNotExistsAsync(cosmosDbOptions.Container, cosmosDbOptions.PartitionKey);
+        Container leaseContainer = await database.CreateContainerIfNotExistsAsync(cosmosDbOptions.LeaseContainer, "/partitionKey");
+
+        var throughPut = await leaseContainer.ReadThroughputAsync();
         
-        var container = cosmosClient.GetContainer(cosmosDbOptions.Database, cosmosDbOptions.Database);
+        Log.Information("Current Container through put {Throughput}", throughPut);
         
-        serviceCollection.AddSingleton(container);
+        if (throughPut < 400)
+        {
+            await leaseContainer.ReplaceThroughputAsync(throughPut.Value + 100);
+        }
+
+        serviceCollection.AddSingleton(cosmosClient);
     }
 }
